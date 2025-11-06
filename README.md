@@ -80,11 +80,21 @@ The frontend stack will arrive in `frontend/` with plans for:
 
 - [x] Define Prisma schema and generate client
 - [x] Add global config module + Prisma infrastructure
-- [ ] Implement auth (register/login, JWT, guards)
+- [x] Implement auth (register/login, JWT, guards)
 - [ ] Build product/catalog domain
 - [ ] Integrate cart and checkout logic
 - [ ] Implement order management and notifications
 - [ ] Scaffold frontend workspace and shared tooling
+
+## Recent Commits
+
+The latest work on `main` delivered the first slice of authentication and user management:
+
+- 2025-11-06 – `feat: implement authentication module with JWT support, user registration, and login functionality` (`54856fb`)
+- 2025-11-06 – `feat: implement user creation logic with validation and password hashing` (`20a0a35`)
+- 2025-11-06 – `docs: update README.md with environment setup, Prisma schema, and migration instructions` (`09e13c7`)
+- 2025-11-06 – `feat: add Prisma module and service for database integration` (`ede37d1`)
+- 2025-11-06 – `feat: add initial Prisma schema, migration files, and configuration` (`721eecb`)
 
 ## Contributing
 
