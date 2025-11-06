@@ -2,10 +2,10 @@ import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateUserDto {
   @IsEmail()
-  email!: string; // unique identifier for login
+  email!: string;
 
   @IsString()
-  @MinLength(8) // strong-ish baseline; enforce more rules if needed
+  @MinLength(8)
   password!: string;
 
   @IsOptional()
