@@ -86,6 +86,14 @@ The frontend stack will arrive in `frontend/` with plans for:
 - [ ] Implement order management and notifications
 - [ ] Scaffold frontend workspace and shared tooling
 
+### Next Phases
+
+1. **Phase 4 – Products**: CRUD endpoints plus pagination, price range filters, name/slug search, active-only toggles, and admin role guards.
+2. **Phase 5 – Cart**: Add/update/remove line items, calculate totals, guard against stock drift, and merge guest carts into user carts on login.
+3. **Phase 6 – Payments**: Abstraction layer that supports Stripe Payment Intents and PayPal Orders; webhook handlers mark payments/orders and decrement inventory.
+4. **Phase 7 – Orders**: User order history plus admin management screens/flows.
+5. **Phase 8 – Frontend (React + Vite + TS)**: RTK Query client, authentication flows, catalog pages, cart UI, Stripe Elements checkout, and PayPal Buttons integration.
+
 ## Recent Commits
 
 The latest work on `main` delivered the first slice of authentication and user management:
