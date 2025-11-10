@@ -139,16 +139,6 @@ The frontend stack will arrive in `frontend/` with plans for:
 - `ProductsController` exposes public catalog reads and guarded admin management routes (create/update/disable/delete).
 - README now documents environment setup, Prisma usage, and product API surface so frontend devs know how to integrate.
 
-## Recent Commits
-
-The latest work on `main` delivered the first slice of authentication and user management:
-
-- 2025-11-06 – `feat: implement authentication module with JWT support, user registration, and login functionality` (`54856fb`)
-- 2025-11-06 – `feat: implement user creation logic with validation and password hashing` (`20a0a35`)
-- 2025-11-06 – `docs: update README.md with environment setup, Prisma schema, and migration instructions` (`09e13c7`)
-- 2025-11-06 – `feat: add Prisma module and service for database integration` (`ede37d1`)
-- 2025-11-06 – `feat: add initial Prisma schema, migration files, and configuration` (`721eecb`)
-
 ## Contributing
 
 1. Fork / clone the repository
