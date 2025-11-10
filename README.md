@@ -4,7 +4,7 @@ Comprehensive e-commerce application covering both the storefront (future React/
 
 ## Repository Layout
 
-- `api/` – NestJS TypeScript backend with authentication, catalog, checkout, and order management modules (in progress)
+- `api/` – NestJS TypeScript backend with authentication, users, and the first iteration of the product/catalog module (checkout, orders, etc. still in progress)
 - `frontend/` – Placeholder for the upcoming web client
 - `package.json` – Workspace-level metadata and package manager declaration
 
@@ -67,6 +67,44 @@ pnpm prisma generate
 pnpm prisma migrate dev
 ```
 
+### Product Catalog Module
+
+Products are now managed end-to-end through DTOs, services, and controller endpoints:
+
+- **DTOs** – `CreateProductDto`, `UpdateProductDto`, and `QueryProductsDto` provide validation for writes and filter/query params (search, price ranges, sorting, pagination).
+- **Service** – `ProductsService` wraps Prisma with:
+  - Typed projections via a shared `PRODUCT_SELECT`.
+  - Cursor or offset pagination, returning `{ data, total, nextCursor }`.
+  - Filtering by search text (`name`, `description`, `sku`) and price ranges.
+  - Sort mapping (`price_asc`, `price_desc`, `newest`) backed by `Prisma.SortOrder`.
+  - Slug generation/de-duping when creating or renaming products.
+  - Soft disable support (flip `active` to `false`) and hard delete.
+- **Controller** – `ProductsController` exposes the endpoints below. Admin-only routes are guarded by `AuthGuard('jwt')` + `RolesGuard`.
+
+#### REST Endpoints
+
+| Method   | Route                   | Auth   | Description                                                       |
+| -------- | ----------------------- | ------ | ----------------------------------------------------------------- |
+| `GET`    | `/products`             | public | List products with filtering/pagination (see query params below). |
+| `GET`    | `/products/:id`         | public | Fetch a single product by id.                                     |
+| `POST`   | `/products`             | admin  | Create a product; auto-generates slug.                            |
+| `PATCH`  | `/products/:id`         | admin  | Update mutable fields; regenerates slug if `name` changes.        |
+| `PATCH`  | `/products/:id/disable` | admin  | Convenience route to mark `active = false`.                       |
+| `DELETE` | `/products/:id`         | admin  | Permanently delete a product.                                     |
+
+**Query parameters (`GET /products`):**
+
+| Param                             | Type                                      | Notes                                                                       |
+| --------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------- |
+| `search`                          | string                                    | Case-insensitive match on `name`, `description`, or `sku`.                  |
+| `minPriceCents` / `maxPriceCents` | number                                    | Inclusive range filter.                                                     |
+| `sort`                            | `'price_asc' \| 'price_desc' \| 'newest'` | Maps to Prisma `orderBy`.                                                   |
+| `limit`                           | number                                    | Page size (default 20).                                                     |
+| `offset`                          | number                                    | Offset pagination when no `cursor` is provided.                             |
+| `cursor`                          | string                                    | Use keyset pagination; response returns `nextCursor` when more data exists. |
+
+> Tip: Admin endpoints require `Authorization: Bearer <JWT>` and a role of `ADMIN`.
+
 ## Frontend (upcoming)
 
 The frontend stack will arrive in `frontend/` with plans for:
@@ -81,18 +119,25 @@ The frontend stack will arrive in `frontend/` with plans for:
 - [x] Define Prisma schema and generate client
 - [x] Add global config module + Prisma infrastructure
 - [x] Implement auth (register/login, JWT, guards)
-- [ ] Build product/catalog domain
+- [x] Build product/catalog domain (CRUD, filters, pagination, admin workflows)
 - [ ] Integrate cart and checkout logic
 - [ ] Implement order management and notifications
 - [ ] Scaffold frontend workspace and shared tooling
 
 ### Next Phases
 
-1. **Phase 4 – Products**: CRUD endpoints plus pagination, price range filters, name/slug search, active-only toggles, and admin role guards.
+1. **Phase 4 – Products (wrap-up)**: Extend specs/tests, add public slug lookups, and wire products into seeding scripts.
 2. **Phase 5 – Cart**: Add/update/remove line items, calculate totals, guard against stock drift, and merge guest carts into user carts on login.
 3. **Phase 6 – Payments**: Abstraction layer that supports Stripe Payment Intents and PayPal Orders; webhook handlers mark payments/orders and decrement inventory.
 4. **Phase 7 – Orders**: User order history plus admin management screens/flows.
 5. **Phase 8 – Frontend (React + Vite + TS)**: RTK Query client, authentication flows, catalog pages, cart UI, Stripe Elements checkout, and PayPal Buttons integration.
+
+## Recent Progress
+
+- Product DTOs (`create`, `update`, `query`) finalized with validation and transformation rules.
+- `ProductsService` wired to Prisma with slug handling, filtering, pagination, and admin-safe CRUD helpers.
+- `ProductsController` exposes public catalog reads and guarded admin management routes (create/update/disable/delete).
+- README now documents environment setup, Prisma usage, and product API surface so frontend devs know how to integrate.
 
 ## Recent Commits
 
