@@ -105,6 +105,26 @@ Products are now managed end-to-end through DTOs, services, and controller endpo
 
 > Tip: Admin endpoints require `Authorization: Bearer <JWT>` and a role of `ADMIN`.
 
+### Cart Module
+
+Authenticated shoppers manage carts through guarded endpoints backed by `CartService`:
+
+- **DTOs** – `AddOrUpdateCartItemDto` enforces `productId` + positive `quantity`.
+- **Service** – Handles `findOrCreateActiveCart`, item upserts, subtotal math, and stock/active checks using Prisma. `clear`/`removeItem` helpers reuse the same projection for consistent responses.
+- **Controller** – Entire controller is wrapped in `AuthGuard('jwt')`, so every route acts on the authenticated user's cart (`req.user.sub`).
+
+#### REST Endpoints
+
+| Method | Route | Auth | Description |
+| --- | --- | --- | --- |
+| `GET` | `/cart` | customer | Returns the caller's active cart with line totals and subtotal. |
+| `POST` | `/cart/items` | customer | Add or replace a line item (body: `{ productId, quantity }`). |
+| `PATCH` | `/cart/items/:productId` | customer | Update quantity for a product (body: `{ quantity }`). |
+| `DELETE` | `/cart/items/:productId` | customer | Remove a specific product from the cart. |
+| `DELETE` | `/cart/clear` | customer | Remove every item from the cart. |
+
+Responses include `cartId`, enriched `items` array (unit price, currency, stock), and `subtotalCents`.
+
 ## Frontend (upcoming)
 
 The frontend stack will arrive in `frontend/` with plans for:
@@ -120,24 +140,24 @@ The frontend stack will arrive in `frontend/` with plans for:
 - [x] Add global config module + Prisma infrastructure
 - [x] Implement auth (register/login, JWT, guards)
 - [x] Build product/catalog domain (CRUD, filters, pagination, admin workflows)
-- [ ] Integrate cart and checkout logic
+- [x] Integrate cart service + controller (JWT-guarded cart CRUD, totals)
 - [ ] Implement order management and notifications
 - [ ] Scaffold frontend workspace and shared tooling
 
 ### Next Phases
 
-1. **Phase 4 – Products (wrap-up)**: Extend specs/tests, add public slug lookups, and wire products into seeding scripts.
-2. **Phase 5 – Cart**: Add/update/remove line items, calculate totals, guard against stock drift, and merge guest carts into user carts on login.
-3. **Phase 6 – Payments**: Abstraction layer that supports Stripe Payment Intents and PayPal Orders; webhook handlers mark payments/orders and decrement inventory.
-4. **Phase 7 – Orders**: User order history plus admin management screens/flows.
-5. **Phase 8 – Frontend (React + Vite + TS)**: RTK Query client, authentication flows, catalog pages, cart UI, Stripe Elements checkout, and PayPal Buttons integration.
+1. **Phase 5 – Checkout**: Persist shipping/billing selections, validate inventory before payment, and emit order drafts from the cart.
+2. **Phase 6 – Payments**: Abstraction layer supporting Stripe Payment Intents and PayPal Orders; webhook handlers mark payments/orders and decrement inventory.
+3. **Phase 7 – Orders**: User order history plus admin management screens/flows.
+4. **Phase 8 – Frontend (React + Vite + TS)**: RTK Query client, authentication flows, catalog pages, cart UI, Stripe Elements checkout, and PayPal Buttons integration.
 
 ## Recent Progress
 
 - Product DTOs (`create`, `update`, `query`) finalized with validation and transformation rules.
 - `ProductsService` wired to Prisma with slug handling, filtering, pagination, and admin-safe CRUD helpers.
 - `ProductsController` exposes public catalog reads and guarded admin management routes (create/update/disable/delete).
-- README now documents environment setup, Prisma usage, and product API surface so frontend devs know how to integrate.
+- Cart module landed: DTO validated inputs, `CartService` calculates subtotals and enforces product activity, and `CartController` delivers authenticated cart CRUD endpoints.
+- README now documents environment setup plus the product and cart API surfaces so frontend devs know how to integrate.
 
 ## Contributing
 
