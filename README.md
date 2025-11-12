@@ -41,6 +41,12 @@ JWT_ACCESS_SECRET="dev_access_secret_change_me"
 JWT_REFRESH_SECRET="dev_refresh_secret_change_me"
 JWT_ACCESS_TTL="900s"
 JWT_REFRESH_TTL="7d"
+
+# Payments
+STRIPE_SECRET_KEY="sk_test_change_me"
+PAYPAL_MODE="sandbox"
+PAYPAL_CLIENT_ID="paypal_client_id"
+PAYPAL_CLIENT_SECRET="paypal_client_secret"
 ```
 
 Prisma also reads `DATABASE_URL` while evaluating `prisma.config.ts`. When running CLI commands outside `api/`, point Prisma to the config/schema explicitly or export the variable in your shell.
@@ -124,6 +130,20 @@ Authenticated shoppers manage carts through guarded endpoints backed by `CartSer
 | `DELETE` | `/cart/clear` | customer | Remove every item from the cart. |
 
 Responses include `cartId`, enriched `items` array (unit price, currency, stock), and `subtotalCents`.
+
+### Checkout & Payments
+
+`CheckoutService` (`api/src/checkout/checkout.service.ts`) turns the authenticated cart into an order snapshot and initializes a payment with the selected provider inside the same Prisma transaction:
+
+- Creates `Order`, related `OrderItem` rows, and the initial `Payment` record tied to the cart totals returned by `CartService`.
+- Enforces non-empty carts and records order metadata (`orderId`, `provider`, total, currency) for downstream fulfillment.
+
+Two provider adapters live under `api/src/payments/providers/`:
+
+- `StripeProvider` wraps Stripe PaymentIntents (`stripe.provider.ts`), enabling automatic payment methods and exposing the `clientSecret` for the frontend.
+- `PaypalProvider` (`paypal.provider.ts`) drives the PayPal REST SDK to create capture orders and surfaces the approval URL, respecting optional `returnUrl` / `cancelUrl` overrides passed in the `StartCheckoutDto`.
+
+Expose the flow through a guarded controller using `StartCheckoutDto` (`api/src/checkout/dto/strart-checkout.dto.ts`) so callers can choose Stripe vs. PayPal and optionally provide redirect URLs. `CheckoutService.start` responds with the persisted `orderId` plus either Stripe's `clientSecret` or PayPal's approval link so the UI can continue the payment flow.
 
 ## Frontend (upcoming)
 
